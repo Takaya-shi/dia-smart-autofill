@@ -1,0 +1,5 @@
+.known-info-autofill-filled {
+  outline: 2px solid #77766f !important;
+  outline-offset: 2px !important;
+  transition: outline-color 180ms ease !important;
+}

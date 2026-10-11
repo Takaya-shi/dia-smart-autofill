@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Known Info Autofill — 設定</title>
+    <link rel="stylesheet" href="ui.css">
+  </head>
+  <body class="options-page">
+    <main class="options-shell">
+      <header class="hero">
+        <img class="brand-icon large" src="icons/icon-128.png" alt="">
+        <div>
+          <p class="eyebrow">KNOWN INFO AUTOFILL</p>
+          <h1>何度も書く情報を、一度だけ。</h1>
+          <p class="lead">保存情報は端末内で管理。AI補助では、入力欄の説明から入力先を判断します。</p>
+        </div>
+      </header>
+
+      <section class="panel profile-toolbar">
+        <div>
+          <label class="field-label" for="profilePicker">編集するプロフィール</label>
+          <select id="profilePicker"></select>
+        </div>
+        <button class="secondary" id="addProfile" type="button">＋ 追加</button>
+        <button class="danger-text" id="deleteProfile" type="button">削除</button>
+      </section>
+
+      <form id="profileForm">
+        <section class="panel">
+          <h2>既存情報を、一枚に。</h2>
+          <p class="field-note">「項目名：内容」で一行ずつ登録します。独自の項目も追加できます。値は端末内のみで扱い、Jevへは項目名とフォームの説明だけを送ります。</p>
+          <label class="switch-row memo-toggle"><span><strong>この情報メモを入力元にする</strong><small>オンの間は下の従来の登録内容を参照しません</small></span><input id="sheetEnabled" type="checkbox"></label>
+          <label class="field-label" for="profileSheet">情報メモ（20,000文字・80項目以内）</label>
+          <textarea id="profileSheet" rows="12" maxlength="20000" spellcheck="false" placeholder="氏名：山田 太郎&#10;ふりがな：ヤマダ タロウ&#10;個人メール：person@example.test&#10;会社メール：work@example.test&#10;得意分野：調査、資料作成"></textarea>
+          <div class="ai-actions memo-actions"><button class="secondary" id="importLegacySheet" type="button">既存の登録をメモにコピー</button><button class="secondary" id="sheetTemplate" type="button">空のひな形を入れる</button></div>
+          <p id="sheetStatus" class="field-note" role="status"></p>
+          <p class="field-note">空の項目は入力しません。続きの行は2文字以上字下げします。カード・APIキー・パスワードは別管理。保存後に「このページを入力」で反映します。</p>
+        </section>
+        <section class="panel">
+          <h2>基本情報</h2>
+          <div class="form-grid">
+            <label class="wide">プロフィール名<input name="profileName" placeholder="例：個人用" required></label>
+            <label>姓<input name="lastName" autocomplete="off"></label>
+            <label>名<input name="firstName" autocomplete="off"></label>
+            <label>セイ（カタカナ）<input name="lastNameKana" autocomplete="off" placeholder="例：ヤマダ" pattern="[ァ-ヶー・ 　]*" title="カタカナで入力してください"></label>
+            <label>メイ（カタカナ）<input name="firstNameKana" autocomplete="off" placeholder="例：タロウ" pattern="[ァ-ヶー・ 　]*" title="カタカナで入力してください"></label>
+            <p class="field-note wide">漢字から読みは推測しません。ここで一度登録すれば、ひらがな指定のフォームにも自動変換して入力します。</p>
+            <label class="wide">メールアドレス<input name="email" type="email" autocomplete="off"></label>
+            <label>電話番号<input name="phone" type="tel" autocomplete="off"></label>
+            <label>生年月日<input name="birthDate" type="date" autocomplete="off"></label>
+            <label class="wide">Webサイト<input name="website" type="url" autocomplete="off"></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>住所</h2>
+          <div class="form-grid">
+            <label>郵便番号<input name="postalCode" autocomplete="off" placeholder="123-4567"></label>
+            <label>都道府県<input name="prefecture" autocomplete="off"></label>
+            <label class="wide">市区町村<input name="city" autocomplete="off"></label>
+            <label class="wide">町名・番地<input name="address1" autocomplete="off"></label>
+            <label class="wide">建物名・部屋番号<input name="address2" autocomplete="off"></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>勤務先</h2>
+          <div class="form-grid">
+            <label class="wide">会社・組織名<input name="company" autocomplete="off"></label>
+            <label>部署<input name="department" autocomplete="off"></label>
+            <label>役職<input name="jobTitle" autocomplete="off"></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <div>
+              <h2>独自項目</h2>
+              <p>よく使う特殊な項目を、フォーム上の呼び名とセットで登録できます。</p>
+            </div>
+            <button class="secondary" id="addCustom" type="button">＋ 項目を追加</button>
+          </div>
+          <div id="customFields" class="custom-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>入力動作</h2>
+          <div class="settings-list">
+            <label class="switch-row">
+              <span><strong>入力済みの値を上書き</strong><small>通常はオフがおすすめです</small></span>
+              <input id="settingOverwrite" type="checkbox">
+            </label>
+            <label class="switch-row">
+              <span><strong>入力した欄を一時的に強調</strong><small>どこが入力されたか確認できます</small></span>
+              <input id="settingHighlight" type="checkbox">
+            </label>
+          </div>
+          <div class="trusted-sites">
+            <div>
+              <strong>自動入力を許可したサイト</strong>
+              <p>サイトの追加は、そのサイトを開いて拡張機能メニューから行います。</p>
+            </div>
+            <div id="trustedSiteList" class="site-list"></div>
+          </div>
+        </section>
+
+        <div class="save-bar">
+          <p id="saveStatus" role="status">変更は「保存」で反映されます</p>
+          <button class="primary save" type="submit">保存</button>
+        </div>
+      </form>
+
+      <section class="panel">
+        <h2>カード情報</h2>
+        <p id="cardSavedState" class="field-note">カードは未登録です</p>
+        <p class="field-note">保存用パスワードで暗号化して、このブラウザに保存します。入力するたびに解除が必要です。パスワードを忘れた場合は再登録してください。</p>
+        <form id="cardForm" class="ai-form" autocomplete="off">
+          <div class="form-grid">
+            <label class="wide">カード番号<input name="cardNumber" type="password" inputmode="numeric" autocomplete="off" required></label>
+            <label class="wide">カード名義<input name="cardName" autocomplete="off" placeholder="TARO YAMADA" required></label>
+            <label>有効期限（月）<input name="cardMonth" inputmode="numeric" placeholder="01〜12" maxlength="2" required></label>
+            <label>有効期限（年）<input name="cardYear" inputmode="numeric" placeholder="2030" maxlength="4" required></label>
+            <label>保存用パスワード<input name="cardPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+            <label>パスワード（確認）<input name="cardPasswordConfirm" type="password" autocomplete="new-password" minlength="8" required></label>
+          </div>
+          <p class="field-note">CVV／セキュリティコードは保存しません。カード情報をJevに渡すことはありません。登録できるカードは1枚です。</p>
+          <div class="ai-actions">
+            <button class="secondary" id="saveCard" type="submit">カードを暗号化して保存</button>
+            <button class="danger-text" id="deleteCard" type="button">保存したカードを削除</button>
+          </div>
+        </form>
+        <p id="cardSaveStatus" class="field-note" role="status"></p>
+      </section>
+
+      <section class="panel">
+        <h2>AI入力補助 · Jev</h2>
+        <p class="field-note">手動入力時は、登録情報の項目名と入力欄の説明をTypeSafe AIへ送り、対応する情報を選ばせます。情報メモ本文・値・APIキーは判定の本文へ送りません。ページ表示時は保存済みの判定のみ使用。自動で有料の問い合わせは増やしません。</p>
+        <form id="jevForm" class="ai-form">
+          <label class="field-label" for="jevApiKey">TypeSafe APIキー</label>
+          <input id="jevApiKey" type="password" autocomplete="off" placeholder="APIキーをここに入力">
+          <p id="jevKeyState" class="field-note"></p>
+          <label class="switch-row">
+            <span><strong>Jevによる判定を使う</strong><small>未登録・低確信度は空欄のまま残します</small></span>
+            <input id="jevEnabled" type="checkbox">
+          </label>
+          <label class="field-label" for="jevMode">判断の優先順位</label><select id="jevMode"><option value="primary">Jev優先 · 全対象欄をAIで判断（おすすめ）</option><option value="hybrid">従来の判定優先 · 曖昧な欄だけAI</option></select>
+          <div class="ai-actions">
+            <button class="secondary" type="submit">AI設定を保存</button>
+            <button class="secondary" id="testJev" type="button">接続を確認</button>
+            <button class="danger-text" id="clearJevKey" type="button">キーを削除</button>
+          </div>
+        </form>
+        <p id="jevStatus" class="field-note" role="status"></p>
+        <div class="trusted-sites">
+          <strong>この端末での利用量</strong>
+          <p id="jevUsage">まだ利用していません</p>
+          <p>料金はJevの入力トークン数からの概算です。接続テストも利用量に含みます。</p>
+          <button class="secondary" id="clearJevCache" type="button">保存したAI判定を消去</button>
+          <p><a href="https://console.typesafe.ai/" target="_blank" rel="noopener noreferrer">TypeSafeでAPIキーを取得</a></p>
+        </div>
+      </section>
+
+      <section class="privacy-note">
+        <strong>入力しない情報</strong>
+        <p>パスワード、セキュリティコード、ファイル、同意欄は入力しません。カード情報は専用ボタンで確認した場合だけ入力します。</p>
+      </section>
+    </main>
+    <template id="customFieldTemplate">
+      <div class="custom-row">
+        <label>フォーム上の呼び名<input data-role="aliases" placeholder="例：会員番号, member_id"></label>
+        <label>入力する値<input data-role="value"></label>
+        <button class="icon-button" data-role="remove" type="button" aria-label="この項目を削除">×</button>
+      </div>
+    </template>
+    <script src="matcher.js"></script>
+    <script src="profile-sheet.js"></script>
+    <script src="options.js"></script>
+    <script src="jev-settings.js"></script>
+    <script src="card-vault.js"></script>
+    <script src="card-settings.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+textarea { width:100%; padding:12px; font:inherit; color:var(--ink); background:white; border:1px solid var(--line); border-radius:10px; resize:vertical; line-height:1.6; }
+.notice { padding:14px 18px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:13px; line-height:1.7; }
+.check { display:flex; align-items:flex-start; gap:10px; margin:18px 0; font-size:13px; line-height:1.6; }
+.check input { width:auto; flex-shrink:0; margin-top:4px; }
+.report-project { padding-top:18px; margin-top:18px; border-top:1px solid var(--line); }
+.report-project h3 { margin:0 0 14px; font-size:15px; }
+.ai-actions { margin-top:16px; }
+#sourceStatus,#targetStatus { margin-top:14px; }
+#warnings,#weeklyWarnings { padding-left:20px; color:var(--muted); font-size:13px; line-height:1.8; }
+#preview { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:13px; line-height:1.8; background:var(--canvas); border-radius:12px; padding:16px; }
+#validation,#fillStatus { font-size:13px; line-height:1.7; }
+#fixture { width:100%; height:680px; border:1px solid var(--line); border-radius:10px; }
+[hidden] { display:none !important; }
+.profile-badge { display:inline-block; margin-left:8px; padding:4px 8px; border:1px solid var(--line); border-radius:8px; color:var(--muted); font-size:12px; font-weight:500; vertical-align:middle; }
+.folder-hint { font-size:12px; overflow-wrap:anywhere; color:var(--muted); }
+#companyPanel details { margin-top:12px; font-size:13px; color:var(--muted); }
+#companyPanel .ai-actions { display:flex; flex-wrap:wrap; gap:8px; }

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Known Info Autofill テストフォーム</title>
+    <link rel="stylesheet" href="test-form.css">
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow">LOCAL TEST FORM</p>
+        <h1>自動入力の動作確認</h1>
+        <p class="lead">フォームの送信はありません。拡張機能が、どの項目を入力・保持・無視するか確認できます。Jev補助を有効にした場合は、項目の説明だけをAIへ送って判定します。</p>
+        <ol class="steps">
+          <li>拡張機能にテスト用の情報を保存</li>
+          <li>拡張機能メニューで「このサイトで自動入力」をオン</li>
+          <li>ページを再読み込みして、入力された欄を確認</li>
+        </ol>
+      </div>
+    </header>
+
+    <main>
+      <aside class="summary" aria-live="polite">
+        <div><span id="filledCount">0</span><small>入力された空欄</small></div>
+        <div><span id="preservedCount">1</span><small>初期値を保持中</small></div>
+        <div><span id="untouchedCount">0</span><small>未入力</small></div>
+      </aside>
+
+      <form id="testForm">
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <span class="number">01</span>
+              <h2>自動入力される項目</h2>
+            </div>
+            <p>`autocomplete`または明確なラベルを持つ項目です。</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="test-field" data-expect="自動：140点">
+              氏名（1行）
+              <input name="full_name" autocomplete="name" placeholder="山田 太郎">
+            </label>
+            <div class="split">
+              <label class="test-field" data-expect="自動：140点">
+                姓
+                <input name="family-name" autocomplete="family-name" placeholder="山田">
+              </label>
+              <label class="test-field" data-expect="自動：140点">
+                名
+                <input name="given-name" autocomplete="given-name" placeholder="太郎">
+              </label>
+            </div>
+            <div class="split">
+              <label class="test-field" data-expect="自動：110点・ひらがな変換">
+                せい（ふりがな）
+                <input name="family_name_furigana" placeholder="やまだ">
+              </label>
+              <label class="test-field" data-expect="自動：110点・ひらがな変換">
+                めい（ふりがな）
+                <input name="given_name_furigana" placeholder="たろう">
+              </label>
+            </div>
+            <div class="split">
+              <label class="test-field" data-expect="自動：105点">
+                セイ
+                <input name="kana_family" placeholder="ヤマダ">
+              </label>
+              <label class="test-field" data-expect="自動：105点">
+                メイ
+                <input name="kana_given" placeholder="タロウ">
+              </label>
+            </div>
+            <label class="test-field" data-expect="自動：140点">
+              メールアドレス
+              <input name="email" type="email" autocomplete="email" placeholder="name@example.com">
+            </label>
+            <label class="test-field" data-expect="自動：140点">
+              電話番号
+              <input name="phone" type="tel" autocomplete="tel" placeholder="090-1234-5678">
+            </label>
+            <label class="test-field" data-expect="自動：140点">
+              生年月日
+              <input name="birth_date" type="date" autocomplete="bday">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div><span class="number">02</span><h2>住所</h2></div>
+            <p>テキスト欄とプルダウンの両方を試します。</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="test-field" data-expect="自動：140点">
+              郵便番号
+              <input name="postal_code" autocomplete="postal-code" placeholder="123-4567">
+            </label>
+            <label class="test-field" data-expect="自動：140点">
+              都道府県
+              <select name="prefecture" autocomplete="address-level1">
+                <option value="">選択してください</option>
+                <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option>
+                <option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option>
+                <option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option>
+                <option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option>
+                <option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option>
+                <option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option>
+                <option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option>
+                <option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option>
+                <option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option>
+                <option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option>
+                <option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option>
+                <option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+              </select>
+            </label>
+            <label class="test-field wide" data-expect="自動：140点">
+              市区町村
+              <input name="city" autocomplete="address-level2" placeholder="調布市調布ケ丘">
+            </label>
+            <label class="test-field wide" data-expect="自動：140点">
+              町名・番地
+              <input name="address_line_1" autocomplete="address-line1" placeholder="1-5-1">
+            </label>
+            <label class="test-field wide" data-expect="自動：140点">
+              建物名・部屋番号
+              <input name="address_line_2" autocomplete="address-line2" placeholder="サンプルハイツ101">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div><span class="number">03</span><h2>勤務先</h2></div>
+            <p>組織情報の標準的な`autocomplete`を使っています。</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="test-field wide" data-expect="自動：140点">
+              会社・組織名
+              <input name="organization" autocomplete="organization">
+            </label>
+            <label class="test-field" data-expect="自動：140点">
+              部署
+              <input name="organization_unit" autocomplete="organization-unit">
+            </label>
+            <label class="test-field" data-expect="自動：140点">
+              役職
+              <input name="organization_title" autocomplete="organization-title">
+            </label>
+            <label class="test-field wide" data-expect="自動：140点">
+              Webサイト
+              <input name="website" type="url" autocomplete="url" placeholder="https://example.com">
+            </label>
+          </div>
+        </section>
+
+        <section class="card accent-card">
+          <div class="section-title">
+            <div><span class="number">04</span><h2>手動実行でだけ拾う項目</h2></div>
+            <p>曖昧な部分一致なので、自動入力の100点基準には届きません。</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="test-field" data-expect="手動のみ：74点">
+              連絡先A
+              <input placeholder="メールアドレスを入力してください">
+            </label>
+            <label class="test-field" data-expect="手動のみ：82点">
+              勤務先A
+              <input name="company_name_extra" placeholder="勤務先を入力">
+            </label>
+            <label class="test-field wide" data-expect="独自項目：別途登録">
+              会員番号
+              <input name="member_id" placeholder="独自項目に member_id を登録してテスト">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div><span class="number">AI</span><h2>Jevで表現の違いを判定</h2></div>
+            <p>AI設定を保存して「このページを入力」を実行してください。</p>
+          </div>
+          <div class="form-grid">
+            <label class="test-field" data-expect="AI判定：メール">
+              連絡がつく電子連絡先<input name="f_101">
+            </label>
+            <label class="test-field" data-expect="AI判定：会社名">
+              お勤めの事業者の名称<input name="f_102">
+            </label>
+            <label class="test-field" data-expect="AI判定：姓カナ">
+              名字のヨミ<input name="f_103">
+            </label>
+            <label class="test-field" data-expect="AI判定：名カナ">
+              下の名前のヨミ<input name="f_104">
+            </label>
+            <label class="test-field wide" data-expect="AI判定：住所を結合">
+              お住まいの所在地（都道府県から建物名まで）<input name="f_105">
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div><span class="number">CARD</span><h2>カードの専用入力を確認</h2></div>
+            <p>「カードを入力」から実行。実カードではなくテスト用の番号を使ってください。</p>
+          </div>
+          <div class="form-grid">
+            <label class="test-field wide" data-expect="専用操作：カード番号">
+              カード番号<input name="demo_card_number" autocomplete="cc-number" inputmode="numeric">
+            </label>
+            <label class="test-field wide" data-expect="専用操作：カード名義">
+              カード名義<input name="demo_card_name" autocomplete="cc-name">
+            </label>
+            <label class="test-field" data-expect="専用操作：有効期限月">
+              有効期限（月）<select name="demo_card_month" autocomplete="cc-exp-month">
+                <option value="">月</option><option value="1">01</option><option value="2">02</option>
+                <option value="3">03</option><option value="4">04</option><option value="5">05</option>
+                <option value="6">06</option><option value="7">07</option><option value="8">08</option>
+                <option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+              </select>
+            </label>
+            <label class="test-field" data-expect="専用操作：有効期限年">
+              有効期限（年）<input name="demo_card_year" autocomplete="cc-exp-year" maxlength="4">
+            </label>
+            <label class="test-field" data-expect="専用操作：有効期限まとめ">
+              有効期限<input name="demo_card_expiry" autocomplete="cc-exp" placeholder="MM/YY">
+            </label>
+            <label class="test-field" data-expect="除外：保存・入力しない">
+              セキュリティコード<input name="demo_card_cvv" autocomplete="cc-csc" inputmode="numeric">
+            </label>
+          </div>
+        </section>
+
+        <section class="card guard-card">
+          <div class="section-title">
+            <div><span class="number">05</span><h2>入力されないことを確認する項目</h2></div>
+            <p>安全上の除外項目と、最初から値がある欄です。</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="test-field" data-expect="除外：パスワード">
+              パスワード
+              <input name="password" type="password">
+            </label>
+            <label class="test-field" data-expect="保持：上書きオフ" data-initial="keep">
+              登録済みメール
+              <input name="existing_email" type="email" autocomplete="email" value="existing@example.test">
+            </label>
+            <label class="check-field test-field" data-expect="除外：チェック欄">
+              <input name="terms" type="checkbox">
+              利用規約に同意する
+            </label>
+            <label class="test-field wide" data-expect="不一致：対象外">
+              お問い合わせ内容
+              <textarea name="message" rows="4" placeholder="自由記述"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button class="secondary" type="reset">すべてリセット</button>
+          <button class="primary" type="submit">入力結果を確認</button>
+        </div>
+      </form>
+
+      <section id="resultPanel" class="result-panel" hidden>
+        <div>
+          <p class="eyebrow">NO DATA WAS SENT</p>
+          <h2>現在の入力結果</h2>
+        </div>
+        <pre id="resultJson"></pre>
+      </section>
+    </main>
+
+    <script src="test-form.js"></script>
+  </body>
+</html>

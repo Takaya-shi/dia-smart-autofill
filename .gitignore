@@ -1,0 +1,20 @@
+# macOS metadata
+.DS_Store
+
+# Local credentials and exported user data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+token*.json
+daily-report-*.json
+weekly-report-preview-*.md
+outputs/
+work/
+node_modules/
+*.zip
+
+# Local verification notes containing actual work and shift details
+/DAILY_REPORT_DESIGN.md

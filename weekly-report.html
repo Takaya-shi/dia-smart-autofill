@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>会社用の週報 · Known Info</title><link rel="stylesheet" href="ui.css"><link rel="stylesheet" href="daily-report.css"></head>
+<body class="options-page"><main class="options-shell">
+<header class="hero"><img class="brand-icon large" src="icons/icon-48.png" alt=""><div><p class="eyebrow">WEEKLY REPORT · NO SUBMISSION</p><h1>会社用の週報</h1><p class="lead">投稿日は今日。前日までの7日間のTasksをつなげ、確認して空欄へ入力します。</p></div></header>
+<p class="notice">送信ボタンは押しません。ただしGoogleフォームでは、入力しただけで回答の下書きがGoogleへ自動保存されることがあります。本番入力の実動確認は未完了です。</p>
+<section class="panel"><h2>1. 対象期間とDaily</h2>
+<label>投稿日（日本時間・本日）<input id="weeklyPostingDate" type="date" readonly></label>
+<p id="weeklyRange" class="field-note"></p><p class="field-note">会社用設定で登録したDailyフォルダを共有します。該当日のTasks以外は読みません。AI・カレンダーは使いません。</p>
+<div class="ai-actions"><button id="weeklyLoad" class="secondary" type="button">直前7日間のTasksを読み込む</button><button id="weeklyChooseDirectory" class="secondary" type="button">Dailyフォルダを登録 · 読み取り専用</button><button id="weeklyPermitDirectory" class="secondary" type="button" hidden>Dailyの読み取りを許可</button></div>
+<details><summary>Dailyフォルダの場所</summary><p class="folder-hint" id="weeklyFolderHint"></p></details>
+<p id="weeklySourceStatus" class="field-note" role="status"></p><ul id="weeklyWarnings"></ul>
+</section>
+<section class="panel"><h2>2. 今週の業務と成果報告の下書き</h2>
+<label>入力する業務内容<textarea id="weeklyText" rows="12" placeholder="DailyのTasksから日付・案件ごとに連結します。成果は推測しません。"></textarea></label>
+<label class="check"><input id="weeklyReview" type="checkbox">対象期間と、実際に行った業務だけが入っていることを確認した</label>
+<label class="check"><input id="weeklyDateOnly" type="checkbox">今回は投稿日だけを入力する（業務欄は変更しない）</label>
+</section>
+<section class="panel"><h2>3. 週報の入力先を確認</h2>
+<p id="weeklyRegisteredUrl" class="field-note">週報URL：未登録</p>
+<div class="ai-actions"><button id="weeklyInspect" class="secondary" type="button">開いている週報の入力欄を読み取る</button><button id="weeklyRemember" class="secondary" type="button" disabled>この週報を会社用に記憶</button></div>
+<p class="field-note">資料投稿フォームは別の入力先です。投稿日と「今週の業務と成果報告」だけを扱い、名前・部署・FTP・メール・チェック欄は変更しません。既存の回答も上書きしません。</p>
+<p id="weeklyTargetStatus" class="field-note" role="status"></p>
+<pre id="weeklyPreview"></pre>
+<p id="weeklyValidation" class="field-note" role="status"></p>
+<label class="check"><input id="weeklyDestination" type="checkbox">会社アカウントの週報に、上の投稿日・業務内容を入力することを確認した</label>
+<label class="check"><input id="weeklyGoogleDraft" type="checkbox">入力内容がGoogleへ送られ、下書きとして自動保存される可能性を了承した（回答の送信ボタンは押さない）</label>
+<button id="weeklyFill" class="primary" type="button" disabled>確認した内容を空欄へ入力 · 回答を送信しない</button>
+<p id="weeklyFillStatus" class="field-note" role="status"></p>
+</section>
+</main><script src="daily-report-core.js"></script><script src="daily-report-company.js"></script><script src="weekly-report-core.js"></script><script src="weekly-report.js"></script></body></html>

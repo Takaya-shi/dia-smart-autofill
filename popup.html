@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Known Info Autofill</title>
+    <link rel="stylesheet" href="ui.css">
+  </head>
+  <body class="popup-page">
+    <main class="popup-shell">
+      <div class="brand-row">
+        <img class="brand-icon" src="icons/icon-48.png" alt="">
+        <div>
+          <h1>Known Info</h1>
+          <p>保存情報からフォーム入力</p>
+        </div>
+      </div>
+
+      <label class="field-label" for="profileSelect">使用するプロフィール</label>
+      <select id="profileSelect"></select>
+
+      <button class="primary" id="fillButton" type="button">このページを入力</button>
+      <p class="status" id="status" role="status">保存済みの空欄だけを入力します</p>
+      <p class="status" id="aiStatus">AI補助は未設定</p>
+
+      <div class="divider"></div>
+      <label class="switch-row">
+        <span>
+          <strong>このサイトで自動入力</strong>
+          <small id="siteLabel">一致度が高い項目だけ</small>
+        </span>
+        <input id="siteAutoFill" type="checkbox">
+      </label>
+
+      <button class="text-button" id="openOptions" type="button">保存情報を編集</button>
+      <button class="text-button" id="openDailyReport" type="button">会社用の日報 · 保存しない</button>
+      <button class="text-button" id="openWeeklyReport" type="button">会社用の週報 · 回答を送信しない</button>
+      <details class="card-tools">
+        <summary>カードを入力</summary>
+        <form id="unlockCardForm" class="ai-form">
+          <label class="field-label" for="unlockPassword">カードの保存用パスワード</label>
+          <input id="unlockPassword" name="unlockPassword" type="password" autocomplete="off" required>
+          <button class="secondary" id="unlockCard" type="submit">解除して入力先を確認</button>
+        </form>
+        <div id="cardConfirmPanel" hidden>
+          <p class="field-note">次のページへカード番号・名義・有効期限を入力します。入力後はサイト側から読み取れます。</p>
+          <p class="card-destination" id="cardDestination"></p>
+          <p class="field-note" id="cardPreview"></p>
+          <div class="ai-actions">
+            <button class="secondary" id="confirmCardFill" type="button">このページへカードを入力</button>
+            <button class="danger-text" id="cancelCardFill" type="button">キャンセル</button>
+          </div>
+        </div>
+        <p id="cardFillStatus" class="field-note" role="status"></p>
+      </details>
+    </main>
+    <script src="matcher.js"></script>
+    <script src="profile-sheet.js"></script>
+    <script src="popup.js"></script>
+    <script src="card-vault.js"></script>
+    <script src="card-fill.js"></script>
+    <script src="card-popup.js"></script>
+  </body>
+</html>
