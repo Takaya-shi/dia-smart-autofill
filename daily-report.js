@@ -5,7 +5,7 @@
   const demo = location.origin === "http://127.0.0.1:8766" && params.get("demo") === "1";
   const tabId = Number(params.get("tab"));
   let events = [], metadata = {}, draft = null, target = null, generation = 0, consumed = false;
-  let companyProfile = null, dailyDirectory = null, companyStore = null, companyReadBusy = 0;
+  let companyProfile = null, dailyDirectory = null, companyStore = null, companyReadBusy = 0, reviewTouched = false;
   const controls = new Map();
   $("reportDate").value = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit" }).format(new Date());
   if (demo) {
@@ -19,9 +19,11 @@
     $("reviewPanel").hidden = true; $("targetPanel").hidden = true;
   }
   $("reportDate").addEventListener("change", () => {
+    globalThis.CalendarReportUI?.cancelPending();
     events = []; metadata = {}; $("markdown").value = ""; $("dailyFile").value = ""; $("sourcesFile").value = "";
     invalidate(); $("sourceStatus").textContent = "日付を変更しました。前の日の内容は使いません。その日のDaily・カレンダーを取り込み直してください。";
     if (companyProfile?.autoLoadDaily && dailyDirectory) void readCompanyDaily();
+    else void globalThis.CalendarReportUI?.maybeAuto();
   });
   $("markdown").addEventListener("input", invalidate);
   async function loadFile(input, handler) {
@@ -74,9 +76,9 @@
       const check = document.createElement("label"); check.className = "check";
       const confirmed = document.createElement("input"); confirmed.type = "checkbox";
       check.append(confirmed, document.createTextNode("この内容を実際に行ったことを確認した")); group.append(check);
-      notes.addEventListener("input", () => { confirmed.checked = false; update(); });
-      for (const el of [mapping, minutes, confirmed, included]) el.addEventListener("change", update);
-      minutes.addEventListener("input", update);
+      notes.addEventListener("input", () => { reviewTouched=true; confirmed.checked = false; update(); });
+      for (const el of [mapping, minutes, confirmed, included]) el.addEventListener("change", () => {reviewTouched=true;update();});
+      minutes.addEventListener("input", () => {reviewTouched=true;update();});
       controls.set(project.id, { mapping, minutes, notes, confirmed, included }); $("projects").append(group);
     }
     populateMappings();
@@ -91,6 +93,7 @@
   }
   $("buildDraft").addEventListener("click", () => {
     try {
+      reviewTouched=false;
       draft = DailyReportCore.buildDraft({ date:$("reportDate").value, markdown:$("markdown").value, events, ...metadata });
       target = null; consumed = false; $("confirmWork").checked = false; $("confirmDestination").checked = false;
       $("workStart").value = draft.selectedShift?.start || ""; $("workEnd").value = draft.selectedShift?.end || ""; $("breakMinutes").value = "";
@@ -107,6 +110,7 @@
   });
   $("addDraftProject").addEventListener("click", () => {
     if (!draft || draft.projects.length >= 20) return;
+    reviewTouched=true;
     draft.projects.push({ id:`manual-${draft.projects.length}`, sourceName:"本人記入の作業", notes:"", tasks:[], portalProjectId:null, minutes:null, confirmedTasks:false });
     // Preserve reviewed entries when a manual row is added.
     readControls(); const saved = draft.projects.map(p => ({...p})); showProjects();
@@ -143,9 +147,9 @@
     $("preview").textContent = `${plan.date} ${plan.start || "未確認"}〜${plan.end || "未確認"} / 休憩 ${plan.breakMinutes ?? "未確認"}分\n\n` + plan.rows.map(row => `${row.name} · ${row.minutes ?? "未確認"}分\n${row.notes}`).join("\n\n");
     $("fillReport").disabled = Boolean(errors.length) || !$("confirmDestination").checked;
   }
-  for (const id of ["workStart","workEnd","breakMinutes"]) $(id).addEventListener("input", () => { $("confirmWork").checked = false; update(); });
-  $("confirmWork").addEventListener("change", update); $("confirmDestination").addEventListener("change", refresh);
-  $("shiftSelect").addEventListener("change", () => { const shift = draft?.shiftCandidates[$("shiftSelect").value]; if (shift) { $("workStart").value = shift.start; $("workEnd").value = shift.end; } $("confirmWork").checked = false; update(); });
+  for (const id of ["workStart","workEnd","breakMinutes"]) $(id).addEventListener("input", () => { reviewTouched=true; $("confirmWork").checked = false; update(); });
+  $("confirmWork").addEventListener("change", () => {reviewTouched=true;update();}); $("confirmDestination").addEventListener("change", () => {reviewTouched=true;refresh();});
+  $("shiftSelect").addEventListener("change", () => { reviewTouched=true;const shift = draft?.shiftCandidates[$("shiftSelect").value]; if (shift) { $("workStart").value = shift.start; $("workEnd").value = shift.end; } $("confirmWork").checked = false; update(); });
   async function operate(operation, plan) {
     if (demo) return $("fixture").contentWindow.DailyReportAdapter.run({operation,plan,allowFixture:true});
     if (!globalThis.chrome?.scripting || !Number.isSafeInteger(tabId) || tabId <= 0) throw new Error("日報画面を開いた状態で、拡張機能の「日報の下書き」から開いてください");
@@ -194,7 +198,7 @@
       $("markdown").value = source.markdown; metadata = { notePath:source.notePath };
       $("permitCompanyDaily").hidden = true;
       $("companyDailyStatus").textContent = `Dailyフォルダ：登録済み / ${source.notePath} を読み取りました。Notesは取り込みません。`;
-      $("sourceStatus").textContent = `${source.notePath} のTasksを端末内に取り込みました。カレンダーの継続取得は未接続です。`;
+      $("sourceStatus").textContent = `${source.notePath} のTasksを端末内に取り込みました。Google接続済みならシフト候補を別途取得できます。`;
       // Local preview only. No confirmations, project mapping, time allocation or portal writes.
       $("buildDraft").click();
     } catch (error) {
@@ -202,7 +206,7 @@
       $("companyDailyStatus").textContent = error.message;
       $("sourceStatus").textContent = error.message;
       $("permitCompanyDaily").hidden = !error.permissionRequired;
-    } finally { companyReadBusy--; companyButtons(); }
+    } finally { companyReadBusy--; companyButtons();if(stamp===generation)void globalThis.CalendarReportUI?.maybeAuto(); }
   }
   async function setupCompany() {
     // This persistent profile is extension-owned, separate from ordinary profile/card/AI data.
@@ -230,10 +234,12 @@
     if (!companyStore) return;
     $("saveCompanyProfile").disabled = true;
     try {
-      const candidate = DailyReportCompany.normalizeProfile({ name:$("companyProfileName").value, calendarId:$("companyCalendarId").value, autoLoadDaily:$("autoLoadDaily").checked });
+      const candidate = DailyReportCompany.normalizeProfile({ ...companyProfile, name:$("companyProfileName").value, calendarId:$("companyCalendarId").value, autoLoadDaily:$("autoLoadDaily").checked });
+      globalThis.CalendarReportUI?.cancelPending();
       invalidate(); events = []; metadata = {};
       companyProfile = await companyStore.saveProfile(candidate); $("companyName").textContent = companyProfile.name;
-      $("companyStatus").textContent = "会社用設定を端末内に記憶しました。会社の日報を保存したわけではありません。カレンダーは未接続です。";
+      $("companyStatus").textContent = "会社用設定を端末内に記憶しました。会社の日報を保存したわけではありません。";
+      void globalThis.CalendarReportUI?.refresh();
     } catch (error) { $("companyStatus").textContent = error.message; }
     finally { $("saveCompanyProfile").disabled = false; }
   });
@@ -248,7 +254,7 @@
       $("permitCompanyDaily").hidden = true;
       if (stamp === generation) await readCompanyDaily();
     } catch (error) { $("companyDailyStatus").textContent = error.name === "AbortError" ? "フォルダ選択をキャンセルしました。登録済みのフォルダは変更していません。" : error.message; }
-    finally { companyReadBusy--; companyButtons(); }
+    finally { companyReadBusy--; companyButtons();if(!companyReadBusy)void globalThis.CalendarReportUI?.maybeAuto(); }
   });
   $("loadCompanyDaily").addEventListener("click", () => { if (!companyReadBusy) void readCompanyDaily(); });
   $("permitCompanyDaily").addEventListener("click", async () => {
@@ -261,7 +267,7 @@
       if (permission !== "granted") throw new Error("読み取りは許可されませんでした。Dailyは読み込まず、日報も変更しません。");
       await readCompanyDaily();
     } catch (error) { $("companyDailyStatus").textContent = error.message; }
-    finally { companyReadBusy--; companyButtons(); }
+    finally { companyReadBusy--; companyButtons();if(!companyReadBusy)void globalThis.CalendarReportUI?.maybeAuto(); }
   });
   $("forgetDailyDirectory").addEventListener("click", async () => {
     if (!companyStore || companyReadBusy) return;
@@ -274,5 +280,26 @@
     } catch (error) { $("companyDailyStatus").textContent = error.message; }
     finally { companyReadBusy--; companyButtons(); }
   });
-  void setupCompany();
+  function calendarSnapshot() {
+    return {generation,date:$("reportDate").value,calendarId:companyProfile?.calendarId||"",busy:companyReadBusy>0,editing:Boolean(draft&&reviewTouched),fingerprint:JSON.stringify([$("markdown").value,...["workStart","workEnd","breakMinutes"].map(id=>$(id).value),$("confirmWork").checked,$("confirmDestination").checked,Array.from(controls.values()).map(c=>[c.mapping.value,c.minutes.value,c.notes.value,c.confirmed.checked,c.included.checked])])};
+  }
+  globalThis.DailyReportCalendarBridge={
+    snapshot:calendarSnapshot,
+    clearLiveSource() {
+      if(metadata.calendarLive!==true)return;
+      events=[];metadata={notePath:metadata.notePath||""};
+      $("sourceStatus").textContent="前回のGoogle取得候補を解除しました。勤務予定は再取得するまで未確認です。";
+      $("confirmWork").checked=false;$("confirmDestination").checked=false;
+      if(draft){draft.shiftCandidates=[];$("shiftSelect").replaceChildren();if(!reviewTouched){$("workStart").value="";$("workEnd").value="";}update();}
+    },
+    apply(source,expected) {
+      const current=calendarSnapshot();
+      if(current.busy||current.editing||current.generation!==expected.generation||current.date!==expected.date||current.calendarId!==expected.calendarId||current.fingerprint!==expected.fingerprint)return false;
+      if(source?.date!==current.date||source.calendarSource!==current.calendarId||source.submit!==false||!Array.isArray(source.events))return false;
+      events=source.events;metadata={notePath:metadata.notePath||"",calendarSource:source.calendarSource,fetchedAt:source.fetchedAt,calendarLive:true};
+      $("sourceStatus").textContent=`${source.date} の勤務予定候補をGoogleから取り込みました。実績・休憩・案件別時間は未確認です。`;
+      $("buildDraft").click();return true;
+    }
+  };
+  void setupCompany().then(()=>globalThis.CalendarReportUI?.refresh(true)).catch(()=>{});
 })();

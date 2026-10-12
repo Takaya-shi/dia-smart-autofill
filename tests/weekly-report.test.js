@@ -100,7 +100,7 @@ test("known weekly form skips ordinary profiles and AI before reading input meta
 test("registered weekly URL is also isolated in the worker, which exposes no personal profile or AI call",async()=>{
   let listener,requests=0;
   const data={profiles:[{id:"personal",email:"private@example.test"}],activeProfileId:"personal",settings:{jevEnabled:true},jevApiKey:"secret",companyReportProfile:{weeklyReportUrl:FORM}};
-  const context={URL,console,importScripts(){},fetch(){requests++;throw Error("No weekly AI calls");},
+  const context={URL,console,CalendarSync:require("../calendar-sync.js"),importScripts(){},fetch(){requests++;throw Error("No weekly AI calls");},
     chrome:{runtime:{id:"ext",getURL:file=>`chrome-extension://ext/${file}`,onMessage:{addListener(fn){listener=fn;}}},storage:{local:{async setAccessLevel(){},async get(){return data;}}}}};
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../background.js"),"utf8"),context);
   const sender={id:"ext",tab:{id:1},url:FORM+"?usp=sf_link"};

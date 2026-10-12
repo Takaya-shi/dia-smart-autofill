@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <base href="../">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>日報の下書き · Known Info</title>
+  <link rel="stylesheet" href="ui.css"><link rel="stylesheet" href="daily-report.css">
+</head>
+<body class="options-page">
+<main class="options-shell">
+  <header class="hero"><img class="brand-icon large" src="icons/icon-48.png" alt=""><div><p class="eyebrow">DAILY REPORT · NO SUBMISSION</p><h1>日報の下書き</h1><p class="lead">作業と時間を確認して、空欄だけに入力。保存・Slack送信は行いません。</p></div></header>
+  <p class="notice">本番画面での動作確認は未完了です。Google接続にはこの拡張専用の認証設定と本人の許可が必要です。勤務予定は実績として確定しません。</p>
+  <section class="panel" id="companyPanel">
+    <h2>会社用プロフィール <span class="profile-badge" id="companyName">架空の会社用設定</span></h2>
+    <p class="field-note">Dailyフォルダを一度登録すると、この画面を開いたときに今日のTasksを取り込みます。読み取り専用・端末内のみ。日報の入力や保存は自動で行いません。</p>
+    <div class="form-grid">
+      <label>会社用の設定名<input id="companyProfileName" value="架空の会社用設定" maxlength="80"></label>
+      <label>会社カレンダーのID<input id="companyCalendarId" type="email" value="work@example.test" maxlength="200"></label>
+    </div>
+    <p class="field-note">日報URL：<a href="https://reports.example.test/productivity" target="_blank" rel="noopener">reports.example.test/productivity</a></p>
+    <div class="calendar-settings">
+      <h3>Googleカレンダー · 読み取り専用</h3>
+      <p class="field-note" id="companyCalendarStatus" role="status">カレンダー接続を確認しています。</p>
+      <p class="field-note">上のカレンダーIDだけを、日本時間の対象日で取得します。「シフト_出社」「シフト_リモート」だけを勤務予定の候補にします。予定の作成・変更・削除は行いません。</p>
+      <label class="check"><input id="calendarConsent" type="checkbox">Googleの認証画面で、カレンダーイベントの読み取りを許可することを確認した</label>
+      <label class="check"><input id="calendarAutoSync" type="checkbox">接続後、日報の下書きを開く時・対象日を変える時にシフト候補を取得する（認証画面は自動で開かない）</label>
+      <div class="ai-actions">
+        <button class="secondary" id="calendarConnect" type="button" disabled>Googleへ接続 · 読み取り専用</button>
+        <button class="secondary" id="calendarSync" type="button" disabled>この日のシフトを再取得</button>
+        <button class="danger-text" id="calendarDisconnect" type="button" disabled>拡張の接続を解除</button>
+      </div>
+      <p class="field-note" id="calendarFetchStatus" role="status"></p>
+      <p class="field-note">編集中の実績・休憩・案件別の内容は上書きしません。接続解除は拡張の登録と任意権限を外す操作です。Google側の許可を取り消す場合はGoogleアカウント側で行ってください。</p>
+      <a href="calendar-setup.html" target="_blank" rel="noopener">初回のGoogle接続設定ガイド</a>
+    </div>
+    <details><summary>選ぶDailyフォルダの場所</summary><p class="folder-hint" id="dailyPathHint"></p><p class="field-note">ブラウザは完全なパスを表示しません。上記のVault内のDailyを選んでください。Vault全体・Noteフォルダは選びません。</p></details>
+    <label class="check"><input id="autoLoadDaily" type="checkbox" checked>この画面を開いたとき・対象日を変えたときに、その日のTasksを読み込む</label>
+    <div class="ai-actions">
+      <button class="secondary" id="saveCompanyProfile" type="button">会社用設定を端末内に記憶</button>
+      <button class="secondary" id="chooseDailyDirectory" type="button">Dailyフォルダを登録 · 読み取り専用</button>
+      <button class="secondary" id="loadCompanyDaily" type="button" disabled>この日のTasksを読み込む</button>
+      <button class="secondary" id="permitCompanyDaily" type="button" hidden>Dailyの読み取りを許可</button>
+      <button class="secondary" id="forgetDailyDirectory" type="button" hidden>フォルダの登録を解除</button>
+    </div>
+    <p class="field-note" id="companyStatus" role="status">会社用の設定を確認しています。</p>
+    <p class="field-note" id="companyDailyStatus" role="status">Dailyフォルダ：未登録</p>
+  </section>
+  <section class="panel">
+    <h2>1. 元の情報を取り込む</h2>
+    <div class="form-grid">
+      <label>対象の日付<input id="reportDate" type="date"></label>
+      <label>Dailyファイル（任意）<input id="dailyFile" type="file" accept=".md,text/markdown"></label>
+      <label class="wide">DailyのTasks（貼り付けも可能）<textarea id="markdown" rows="6" placeholder="## Tasks&#10;案件名&#10;- 作業内容"></textarea></label>
+      <label class="wide">読み取りデータJSON（任意）<input id="sourcesFile" type="file" accept=".json,application/json"></label>
+    </div>
+    <p class="field-note" id="sourceStatus">ファイルは端末内だけで読みます。Notesは作業実績に使いません。AIにも送りません。</p>
+    <p class="field-note">Google接続またはJSON取り込みで勤務予定候補を表示できます。それ以外は時刻を手入力します。予定時刻・休憩・案件別時間を実績として自動確定しません。</p>
+    <div class="ai-actions"><button class="secondary" id="buildDraft" type="button">下書きを作る</button><button class="secondary" id="demoData" type="button" hidden>架空のデータで試す</button></div>
+  </section>
+  <section class="panel" id="reviewPanel" hidden>
+    <h2>2. 実際に行った内容を確認</h2>
+    <ul id="warnings"></ul>
+    <div class="form-grid">
+      <label>業務開始時刻<input id="workStart" type="time"></label>
+      <label>業務終了時刻<input id="workEnd" type="time"></label>
+      <label>休憩時間（分）<input id="breakMinutes" type="number" min="0" step="1" placeholder="未確認"></label>
+      <label>勤務予定の候補<select id="shiftSelect"></select></label>
+    </div>
+    <label class="check"><input id="confirmWork" type="checkbox">開始・終了・休憩を、予定ではなく実績として確認した</label>
+    <p class="field-note" id="nextWork"></p>
+    <div id="projects"></div>
+    <button class="secondary" id="addDraftProject" type="button">下書きに作業を追加</button>
+  </section>
+  <section class="panel" id="targetPanel" hidden>
+    <h2>3. 入力先を確認</h2>
+    <p class="field-note">日報側で、同じ日付を選び、必要な案件を追加・選択してください。「詳細入力」は開いた状態にします。日付や案件の選択は自動変更しません。</p>
+    <button class="secondary" id="inspectTarget" type="button">日報の入力欄を読み取る</button>
+    <p id="targetStatus" role="status" class="field-note"></p>
+    <p class="field-note">入力先：reports.example.test/productivity。既存の時刻・時間・作業内容があれば上書きしません。任意の日報項目は変更しません。</p>
+    <p id="validation" role="status"></p>
+    <pre id="preview"></pre>
+    <label class="check"><input id="confirmDestination" type="checkbox">会社の日報画面に、この作業内容と時間を入力することを確認した（サイトから読み取れる状態になります）</label>
+    <button class="primary" id="fillReport" type="button" disabled>確認した下書きを空欄へ入力 · 保存しない</button>
+    <p id="fillStatus" role="status"></p>
+  </section>
+  <section class="panel" id="fixturePanel" hidden><h2>ローカル検証用の日報（架空データ）</h2><iframe id="fixture" title="日報テストフォーム"></iframe></section>
+</main>
+<script src="daily-report-core.js"></script><script src="daily-report-company.js"></script><script src="daily-report-adapter.js"></script><script src="demo/calendar-preview-fixture.js"></script><script src="daily-report.js"></script><script src="calendar-ui.js"></script>
+</body></html>

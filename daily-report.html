@@ -8,7 +8,7 @@
 <body class="options-page">
 <main class="options-shell">
   <header class="hero"><img class="brand-icon large" src="icons/icon-48.png" alt=""><div><p class="eyebrow">DAILY REPORT · NO SUBMISSION</p><h1>日報の下書き</h1><p class="lead">作業と時間を確認して、空欄だけに入力。保存・Slack送信は行いません。</p></div></header>
-  <p class="notice">本番画面での動作確認は未完了です。カレンダーの継続取得も未設定です。まず取り込みデータとローカルテストで確認できます。</p>
+  <p class="notice">本番画面での動作確認は未完了です。Google接続にはこの拡張専用の認証設定と本人の許可が必要です。勤務予定は実績として確定しません。</p>
   <section class="panel" id="companyPanel">
     <h2>会社用プロフィール <span class="profile-badge" id="companyName">会社用</span></h2>
     <p class="field-note">Dailyフォルダを一度登録すると、この画面を開いたときに今日のTasksを取り込みます。読み取り専用・端末内のみ。日報の入力や保存は自動で行いません。</p>
@@ -17,7 +17,21 @@
       <label>会社カレンダーのID<input id="companyCalendarId" type="email" value="work@example.test" maxlength="200"></label>
     </div>
     <p class="field-note">日報URL：<a href="https://reports.example.test/productivity" target="_blank" rel="noopener">reports.example.test/productivity</a></p>
-    <p class="field-note" id="companyCalendarStatus">カレンダー：連携先の設定のみ。継続取得は未接続です。予定や休憩を実績に置き換えません。</p>
+    <div class="calendar-settings">
+      <h3>Googleカレンダー · 読み取り専用</h3>
+      <p class="field-note" id="companyCalendarStatus" role="status">カレンダー接続を確認しています。</p>
+      <p class="field-note">上のカレンダーIDだけを、日本時間の対象日で取得します。「シフト_出社」「シフト_リモート」だけを勤務予定の候補にします。予定の作成・変更・削除は行いません。</p>
+      <label class="check"><input id="calendarConsent" type="checkbox">Googleの認証画面で、カレンダーイベントの読み取りを許可することを確認した</label>
+      <label class="check"><input id="calendarAutoSync" type="checkbox">接続後、日報の下書きを開く時・対象日を変える時にシフト候補を取得する（認証画面は自動で開かない）</label>
+      <div class="ai-actions">
+        <button class="secondary" id="calendarConnect" type="button" disabled>Googleへ接続 · 読み取り専用</button>
+        <button class="secondary" id="calendarSync" type="button" disabled>この日のシフトを再取得</button>
+        <button class="danger-text" id="calendarDisconnect" type="button" disabled>拡張の接続を解除</button>
+      </div>
+      <p class="field-note" id="calendarFetchStatus" role="status"></p>
+      <p class="field-note">編集中の実績・休憩・案件別の内容は上書きしません。接続解除は拡張の登録と任意権限を外す操作です。Google側の許可を取り消す場合はGoogleアカウント側で行ってください。</p>
+      <a href="calendar-setup.html" target="_blank" rel="noopener">初回のGoogle接続設定ガイド</a>
+    </div>
     <details><summary>選ぶDailyフォルダの場所</summary><p class="folder-hint" id="dailyPathHint"></p><p class="field-note">ブラウザは完全なパスを表示しません。上記のVault内のDailyを選んでください。Vault全体・Noteフォルダは選びません。</p></details>
     <label class="check"><input id="autoLoadDaily" type="checkbox" checked>この画面を開いたとき・対象日を変えたときに、その日のTasksを読み込む</label>
     <div class="ai-actions">
@@ -39,7 +53,7 @@
       <label class="wide">読み取りデータJSON（任意）<input id="sourcesFile" type="file" accept=".json,application/json"></label>
     </div>
     <p class="field-note" id="sourceStatus">ファイルは端末内だけで読みます。Notesは作業実績に使いません。AIにも送りません。</p>
-    <p class="field-note">カレンダーJSONがなければ時刻は手入力です。予定時刻・休憩・案件別時間を実績とみなして自動確定することはありません。</p>
+    <p class="field-note">Google接続またはJSON取り込みで勤務予定候補を表示できます。それ以外は時刻を手入力します。予定時刻・休憩・案件別時間を実績として自動確定しません。</p>
     <div class="ai-actions"><button class="secondary" id="buildDraft" type="button">下書きを作る</button><button class="secondary" id="demoData" type="button" hidden>架空のデータで試す</button></div>
   </section>
   <section class="panel" id="reviewPanel" hidden>
@@ -70,5 +84,5 @@
   </section>
   <section class="panel" id="fixturePanel" hidden><h2>ローカル検証用の日報（架空データ）</h2><iframe id="fixture" title="日報テストフォーム"></iframe></section>
 </main>
-<script src="daily-report-core.js"></script><script src="daily-report-company.js"></script><script src="daily-report-adapter.js"></script><script src="daily-report.js"></script>
+<script src="daily-report-core.js"></script><script src="daily-report-company.js"></script><script src="daily-report-adapter.js"></script><script src="daily-report.js"></script><script src="calendar-ui.js"></script>
 </body></html>

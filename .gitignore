@@ -18,3 +18,4 @@ node_modules/
 
 # Local verification notes containing actual work and shift details
 /DAILY_REPORT_DESIGN.md
+*.before-calendar-oauth
