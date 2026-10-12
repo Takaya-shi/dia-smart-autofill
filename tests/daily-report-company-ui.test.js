@@ -58,7 +58,7 @@ function ui({handle=null,profile=null,picker=null,loadProfile=null,extension=tru
     indexedDB:db,showDirectoryPicker:picker,DailyReportCore:Core,DailyReportCompany:Company
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,"../daily-report.js"),"utf8"),context);
-  return {elements,data,writes,portalCalls,db};
+  return {elements,data,writes,portalCalls,db,bridge:context.DailyReportCalendarBridge};
 }
 test("extension UI restores company profile and builds today's local draft without touching portal or confirming work",async()=> {
   const source=handleSource(), view=ui({handle:source.handle}); await settle();
@@ -135,4 +135,21 @@ test("auto-read off retains settings but does not read on open; changing date cl
   view.elements.markdown.value="## Tasks\n- 前の日の内容";
   view.elements.reportDate.value="2026-10-15"; await view.elements.reportDate.emit("change"); await settle();
   assert.equal(view.elements.markdown.value,""); assert.deepEqual(source.calls,[]);
+});
+test("calendar source builds local unconfirmed candidates and never touches report fields or portal",async()=>{
+  const view=ui({handle:handleSource().handle});await settle();const snap=view.bridge.snapshot();
+  const source={date:snap.date,calendarSource:snap.calendarId,fetchedAt:"TEST",submit:false,events:[{id:"one",summary:"シフト_出社",start:{dateTime:`${snap.date}T09:00:00+09:00`},end:{dateTime:`${snap.date}T17:00:00+09:00`}}]};
+  assert.equal(view.bridge.apply(source,snap),true);assert.equal(view.elements.workStart.value,"09:00");assert.equal(view.elements.workEnd.value,"17:00");
+  assert.equal(view.elements.confirmWork.checked,false);assert.equal(view.elements.confirmDestination.checked,false);assert.equal(view.elements.breakMinutes.value,"");assert.equal(view.elements.fillReport.disabled,true);assert.deepEqual(view.portalCalls,[]);
+  view.bridge.clearLiveSource();assert.equal(view.elements.workStart.value,"");assert.equal(view.elements.workEnd.value,"");
+});
+test("calendar result cannot overwrite markdown, edited times or a new report day",async()=>{
+  for(const edit of [async v=>{v.elements.markdown.value="本人の編集";await v.elements.markdown.emit("input");},async v=>{v.elements.workStart.value="11:00";await v.elements.workStart.emit("input");},async v=>{v.elements.reportDate.value="2026-10-20";await v.elements.reportDate.emit("change");}]) {
+    const v=ui({handle:handleSource().handle});await settle();const snap=v.bridge.snapshot();await edit(v);
+    assert.equal(v.bridge.apply({date:snap.date,calendarSource:snap.calendarId,submit:false,events:[]},snap),false);assert.deepEqual(v.portalCalls,[]);
+  }
+});
+test("saving calendar settings retains weekly registration rather than resetting its separate flow",async()=>{
+  const url="https://docs.google.com/forms/d/e/ExampleForm/viewform",v=ui({profile:{...Company.DEFAULTS,weeklyReportUrl:url}});await settle();
+  await v.elements.saveCompanyProfile.click();assert.equal(v.data.companyReportProfile.weeklyReportUrl,url);assert.deepEqual(v.portalCalls,[]);
 });

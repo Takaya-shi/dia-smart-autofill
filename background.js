@@ -1,8 +1,9 @@
 "use strict";
-importScripts("matcher.js", "profile-sheet.js", "jev-core.js");
+importScripts("matcher.js", "profile-sheet.js", "jev-core.js", "calendar-sync.js");
 
 // Keep the API key and all persistent state inaccessible to content-script storage APIs.
 const storageReady = chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
+const calendarService = CalendarSync.createService({chrome,fetch});
 const inFlight = new Map();
 let queue = Promise.resolve();
 
@@ -106,9 +107,21 @@ async function classify(message, sender) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id) return false;
-  if (!["GET_FILL_STATE", "CLASSIFY_FIELDS", "TEST_JEV"].includes(message?.type)) return false;
+  const calendarTypes=["CALENDAR_STATUS","CALENDAR_CONNECT","CALENDAR_SYNC","CALENDAR_DISCONNECT","CALENDAR_SET_AUTO","CALENDAR_CANCEL"];
+  if (!["GET_FILL_STATE", "CLASSIFY_FIELDS", "TEST_JEV",...calendarTypes].includes(message?.type)) return false;
   (async () => {
     await storageReady;
+    if(calendarTypes.includes(message.type)) {
+      let owned=false;
+      try {const url=new URL(sender.url),expected=new URL(chrome.runtime.getURL("daily-report.html"));owned=url.origin===expected.origin&&url.protocol===expected.protocol&&url.host===expected.host&&url.pathname===expected.pathname;}catch(_error){}
+      if(!owned)throw new Error("カレンダー接続は拡張の日報画面だけで操作できます");
+      if(message.type==="CALENDAR_STATUS")return calendarService.status();
+      if(message.type==="CALENDAR_CONNECT")return calendarService.connect(message.date,message.consent);
+      if(message.type==="CALENDAR_SYNC")return calendarService.sync(message.date);
+      if(message.type==="CALENDAR_DISCONNECT")return calendarService.disconnect();
+      if(message.type==="CALENDAR_CANCEL")return calendarService.cancel();
+      return calendarService.setAuto(message.enabled);
+    }
     if (message.type === "GET_FILL_STATE" && isPage(sender)) return fillState(sender);
     if (message.type === "CLASSIFY_FIELDS" && isPage(sender)) return classify(message, sender);
     if (message.type === "TEST_JEV" && isExtensionUI(sender)) {
@@ -122,6 +135,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return { ok: true };
     }
     throw new Error("この操作は許可されていません");
-  })().then(sendResponse).catch((error) => sendResponse({ error: error.message }));
+  })().then(sendResponse).catch((error) => sendResponse({ error: error.message, ...(calendarTypes.includes(message.type)?{code:error.code||"calendar-error"}:{}) }));
   return true;
 });
